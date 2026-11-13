@@ -4,13 +4,15 @@ import { readFileSync } from 'node:fs';
 
 const sql = readFileSync(new URL('../supabase/migrations/20261113_student_chat.sql', import.meta.url), 'utf8');
 const lower = sql.toLowerCase();
-const functionBody = (name) => {
-  const start = lower.indexOf(`function public.${name}`);
+const rooms = readFileSync(new URL('../supabase/migrations/20261113_student_chat_rooms.sql', import.meta.url), 'utf8');
+const roomSql = rooms.toLowerCase();
+const bodyOf = (source, name) => {
+  const start = source.indexOf(`function public.${name}`);
   assert.notEqual(start, -1, `missing function ${name}`);
-  const bodyStart = lower.indexOf('as $$', start);
-  const bodyEnd = lower.indexOf('$$;', bodyStart);
+  const bodyStart = source.indexOf('as $$', start);
+  const bodyEnd = source.indexOf('$$;', bodyStart);
   assert.ok(bodyStart !== -1 && bodyEnd !== -1, `cannot parse body for ${name}`);
-  return lower.slice(start, bodyEnd);
+  return source.slice(start, bodyEnd);
 };
 
 test('public_message_rows_exclude_account_ids', () => {
@@ -25,6 +27,11 @@ test('public_message_rows_exclude_account_ids', () => {
   assert.match(lower, /alter publication supabase_realtime add table public\.student_chat_messages/);
   assert.doesNotMatch(lower, /alter publication supabase_realtime add table public\.student_chat_(authors|reports)/);
   assert.match(lower, /references auth\.users\(id\) on delete cascade/);
+  assert.match(roomSql, /add column if not exists room_group text/);
+  assert.match(roomSql, /add column if not exists is_admin boolean not null default false/);
+  assert.match(roomSql, /set room_group = p\.group_type/);
+  assert.match(roomSql, /p\.group_type in \('boys', 'girls'\)/);
+  assert.match(roomSql, /room_group is null or room_group in \('boys', 'girls'\)/);
 });
 
 test('direct_message_writes_are_revoked', () => {
@@ -42,10 +49,14 @@ test('read_policy_requires_eligible_student_or_admin', () => {
   assert.match(policy, /p\.role = 'admin'/);
   assert.match(policy, /s\.status = 'active'/);
   assert.match(policy, /s\.end_date is null or s\.end_date >= \(pg_catalog\.now\(\) at time zone 'asia\/baghdad'\)::date/);
+  const roomPolicy = roomSql.slice(roomSql.indexOf('create policy student_chat_messages_room_read'));
+  assert.match(roomPolicy, /room_group in \('boys', 'girls'\)/);
+  assert.match(roomPolicy, /p\.group_type = room_group/);
+  assert.match(roomPolicy, /p\.role = 'admin'/);
 });
 
 test('send_rpc_enforces_subscription_and_rate_limit', () => {
-  const send = functionBody('send_student_chat_message');
+  const send = bodyOf(lower, 'send_student_chat_message');
   assert.match(send, /security definer set search_path = ''/);
   assert.match(send, /s\.status = 'active'/);
   assert.match(send, /s\.end_date is null or s\.end_date >= \(pg_catalog\.now\(\) at time zone 'asia\/baghdad'\)::date/);
@@ -61,7 +72,7 @@ test('send_rpc_enforces_subscription_and_rate_limit', () => {
 });
 
 test('access_rpc_returns_only_current_student_eligibility', () => {
-  const access = functionBody('student_chat_access');
+  const access = bodyOf(lower, 'student_chat_access');
   assert.match(access, /returns boolean/);
   assert.match(access, /security definer set search_path = ''/);
   assert.match(access, /s\.status = 'active'/);
@@ -71,8 +82,8 @@ test('access_rpc_returns_only_current_student_eligibility', () => {
 });
 
 test('moderation_rpcs_require_admin', () => {
-  const list = functionBody('admin_list_student_chat_reports');
-  const remove = functionBody('admin_delete_student_chat_message');
+  const list = bodyOf(lower, 'admin_list_student_chat_reports');
+  const remove = bodyOf(lower, 'admin_delete_student_chat_message');
   for (const body of [list, remove]) {
     assert.match(body, /security definer set search_path = ''/);
     assert.match(body, /p\.role = 'admin'/);
@@ -82,10 +93,56 @@ test('moderation_rpcs_require_admin', () => {
   assert.match(list, /pg_catalog\.count\(r\.message_id\)/);
   assert.doesNotMatch(list, /reporter_id|author_id|auth\.uid\(\)\s+as/);
   assert.match(remove, /delete from public\.student_chat_messages/);
-  const report = functionBody('report_student_chat_message');
+  const report = bodyOf(lower, 'report_student_chat_message');
   assert.match(report, /admins cannot report student messages/);
   assert.match(list, /admin_list_student_chat_reports\(p_limit integer default 100\)/);
   assert.match(list, /limit greatest\(1, least\(coalesce\(p_limit, 100\), 100\)\)/);
   assert.match(lower, /revoke all on function public\.admin_list_student_chat_reports\(integer\) from public, anon/);
   assert.match(lower, /revoke all on function public\.admin_delete_student_chat_message\(uuid\) from public, anon/);
+});
+
+test('chat_room_access_is_group_bound_and_admin_has_both_rooms', () => {
+  const access = bodyOf(roomSql, 'chat_room_access');
+  assert.match(access, /returns boolean/);
+  assert.match(access, /p_room not in \('boys', 'girls'\)/);
+  assert.match(access, /p\.role = 'admin'/);
+  assert.match(access, /p\.group_type = p_room/);
+  assert.match(access, /s\.status = 'active'/);
+  assert.match(access, /s\.end_date is null or s\.end_date >= \(pg_catalog\.now\(\) at time zone 'asia\/baghdad'\)::date/);
+  assert.match(roomSql, /grant execute on function public\.chat_room_access\(text\) to authenticated/);
+  assert.match(roomSql, /revoke all on function public\.chat_room_access\(text\) from public, anon/);
+});
+
+test('send_chat_room_message_cannot_cross_groups', () => {
+  const send = bodyOf(roomSql, 'send_chat_room_message');
+  assert.match(send, /public\.chat_room_access\(p_room\)/);
+  assert.match(send, /p_room not in \('boys', 'girls'\)/);
+  assert.match(send, /pg_catalog\.char_length\(v_body\) > 500/);
+  assert.match(send, /pg_advisory_xact_lock/);
+  assert.match(send, /v_last \+ interval '2 seconds'/);
+  assert.match(send, /room_group, is_admin/);
+  assert.match(send, /returns table \(id uuid, room_group text, display_name text, is_admin boolean, body text, created_at timestamptz\)/);
+  assert.match(roomSql, /revoke all on function public\.send_student_chat_message\(text\) from public, anon, authenticated/);
+});
+
+test('unclassified_legacy_messages_are_quarantined', () => {
+  assert.match(roomSql, /where a\.message_id = m\.id and m\.room_group is null/);
+  assert.match(roomSql, /room_group is null or room_group in \('boys', 'girls'\)/);
+  assert.match(roomSql, /room_group in \('boys', 'girls'\) and/);
+});
+
+test('reports_and_deletes_are_room_scoped', () => {
+  const report = bodyOf(roomSql, 'report_student_chat_room_message');
+  assert.match(report, /not public\.chat_room_access\(p_room\)/);
+  assert.match(report, /m\.room_group = p_room/);
+  assert.match(report, /admins cannot report student messages/);
+  const list = bodyOf(roomSql, 'admin_list_student_chat_reports');
+  assert.match(list, /valid selected room required/);
+  assert.match(list, /where m\.room_group = p_room/);
+  assert.match(list, /limit greatest\(1, least\(coalesce\(p_limit, 100\), 100\)\)/);
+  assert.doesNotMatch(list, /reporter_id|author_id/);
+  const remove = bodyOf(roomSql, 'admin_delete_student_chat_message');
+  assert.match(remove, /valid selected room required/);
+  assert.match(remove, /m\.room_group = p_room/);
+  assert.match(roomSql, /revoke all on function public\.admin_delete_student_chat_message\(uuid\) from public, anon, authenticated/);
 });

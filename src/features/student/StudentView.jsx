@@ -83,7 +83,7 @@ export default function StudentView({ profile, showToast, reportError }) {
     </section>}
 
     {tab === 'map' && <section className="card"><h2><i className="fa-solid fa-location-dot"/> أين الكوستر؟</h2><BusMap reportError={reportError}/></section>}
-    {tab === 'chat' && <ChatPanel/>}
+    {tab === 'chat' && <ChatPanel room={profile.group_type} />}
     <div hidden={tab !== 'map'}><ArrivalReminder showToast={showToast} reportError={reportError}/></div>
 
     {tab === 'ann' && <section><div className="card"><h2><i className="fa-solid fa-bullhorn"/> التنبيهات</h2>{data.announcements.length ? data.announcements.map((announcement, index) => <div className="bub" key={announcement.id || index}><b>{announcement.title}</b><br/><span>{announcement.message}</span><time>{new Date(announcement.created_at).toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad' })}</time></div>) : <div className="empty-state">لا توجد تنبيهات حالياً.</div>}</div><div className="card"><h2><i className="fa-solid fa-mobile-screen"/> إشعارات الهاتف</h2><PushSettings userId={profile.id} showToast={showToast} reportError={reportError}/></div></section>}
