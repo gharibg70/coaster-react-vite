@@ -5,11 +5,11 @@ alter table public.student_chat_messages add column if not exists is_admin boole
 
 -- Assign old messages only when their private author has a valid current group.
 update public.student_chat_messages m
-set room_group = p.group_type
+set room_group = p.group_type::text
 from public.student_chat_authors a
 join public.profiles p on p.id = a.author_id
 where a.message_id = m.id and m.room_group is null
-  and p.group_type in ('boys', 'girls');
+  and p.group_type::text in ('boys', 'girls');
 
 alter table public.student_chat_messages drop constraint if exists student_chat_messages_room_group_check;
 alter table public.student_chat_messages add constraint student_chat_messages_room_group_check
@@ -24,8 +24,8 @@ for select to authenticated using (
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin')
     or exists (
       select 1 from public.profiles p join public.subscriptions s on s.user_id = p.id
-      where p.id = auth.uid() and p.role <> 'admin' and p.group_type = room_group
-        and p.group_type in ('boys', 'girls') and s.status = 'active'
+      where p.id = auth.uid() and p.role <> 'admin' and p.group_type::text = room_group
+        and p.group_type::text in ('boys', 'girls') and s.status = 'active'
         and (s.end_date is null or s.end_date >= (pg_catalog.now() at time zone 'Asia/Baghdad')::date)
     )
   )
@@ -39,7 +39,7 @@ begin
   if exists (select 1 from public.profiles p where p.id = v_uid and p.role = 'admin') then return true; end if;
   return exists (
     select 1 from public.profiles p join public.subscriptions s on s.user_id = p.id
-    where p.id = v_uid and p.group_type = p_room and p.group_type in ('boys', 'girls')
+    where p.id = v_uid and p.group_type::text = p_room and p.group_type::text in ('boys', 'girls')
       and s.status = 'active'
       and (s.end_date is null or s.end_date >= (pg_catalog.now() at time zone 'Asia/Baghdad')::date)
   );

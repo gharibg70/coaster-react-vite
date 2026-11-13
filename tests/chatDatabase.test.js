@@ -197,7 +197,8 @@ test('student_chat_rooms_migration_is_group_scoped_and_quarantines_unknown_legac
       create table auth.users(id uuid primary key);
       create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       grant usage on schema auth to anon, authenticated;
-      create table public.profiles(id uuid primary key, full_name text, role text, group_type text);
+      create type public.student_group as enum ('boys', 'girls');
+      create table public.profiles(id uuid primary key, full_name text, role text, group_type public.student_group);
       create table public.subscriptions(user_id uuid, status text, end_date date);
       grant select on public.profiles, public.subscriptions to authenticated;`);
     for (const id of [boys, girls, admin, unknown, suspended, expired]) await db.query('insert into auth.users(id) values ($1)', [id]);

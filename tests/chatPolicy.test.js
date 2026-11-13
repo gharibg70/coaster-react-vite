@@ -29,8 +29,8 @@ test('public_message_rows_exclude_account_ids', () => {
   assert.match(lower, /references auth\.users\(id\) on delete cascade/);
   assert.match(roomSql, /add column if not exists room_group text/);
   assert.match(roomSql, /add column if not exists is_admin boolean not null default false/);
-  assert.match(roomSql, /set room_group = p\.group_type/);
-  assert.match(roomSql, /p\.group_type in \('boys', 'girls'\)/);
+  assert.match(roomSql, /set room_group = p\.group_type::text/);
+  assert.match(roomSql, /p\.group_type::text in \('boys', 'girls'\)/);
   assert.match(roomSql, /room_group is null or room_group in \('boys', 'girls'\)/);
 });
 
@@ -51,7 +51,7 @@ test('read_policy_requires_eligible_student_or_admin', () => {
   assert.match(policy, /s\.end_date is null or s\.end_date >= \(pg_catalog\.now\(\) at time zone 'asia\/baghdad'\)::date/);
   const roomPolicy = roomSql.slice(roomSql.indexOf('create policy student_chat_messages_room_read'));
   assert.match(roomPolicy, /room_group in \('boys', 'girls'\)/);
-  assert.match(roomPolicy, /p\.group_type = room_group/);
+  assert.match(roomPolicy, /p\.group_type::text = room_group/);
   assert.match(roomPolicy, /p\.role = 'admin'/);
 });
 
@@ -106,7 +106,7 @@ test('chat_room_access_is_group_bound_and_admin_has_both_rooms', () => {
   assert.match(access, /returns boolean/);
   assert.match(access, /p_room not in \('boys', 'girls'\)/);
   assert.match(access, /p\.role = 'admin'/);
-  assert.match(access, /p\.group_type = p_room/);
+  assert.match(access, /p\.group_type::text = p_room/);
   assert.match(access, /s\.status = 'active'/);
   assert.match(access, /s\.end_date is null or s\.end_date >= \(pg_catalog\.now\(\) at time zone 'asia\/baghdad'\)::date/);
   assert.match(roomSql, /grant execute on function public\.chat_room_access\(text\) to authenticated/);
