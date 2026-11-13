@@ -1,19 +1,36 @@
-const C = 'bus-v2';
+const CACHE_NAME = 'bus-v3';
+
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-self.addEventListener('fetch', e => {
-  const u = new URL(e.request.url);
-  if (e.request.method !== 'GET' || u.origin !== location.origin) return;
-  e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(C).then(x => x.put(e.request, c)); return r; }).catch(() => caches.match(e.request)));
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const names = await caches.keys();
+    await Promise.all(names.filter((name) => name.startsWith('bus-') && name !== CACHE_NAME).map((name) => caches.delete(name)));
+    await clients.claim();
+  })());
 });
-self.addEventListener('push', e => {
-  let d = {};
-  try { d = e.data.json(); } catch (_) {}
-  e.waitUntil(self.registration.showNotification(d.title || 'كوستر الجامعة', {
-    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', dir: 'rtl', lang: 'ar'
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== location.origin) return;
+  event.respondWith(fetch(event.request).then((response) => {
+    const copy = response.clone();
+    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    return response;
+  }).catch(() => caches.match(event.request)));
+});
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data.json(); } catch { /* show a minimal fallback notification */ }
+  event.waitUntil(self.registration.showNotification(data.title || 'كوستر الجامعة', {
+    body: data.body || '', icon: 'icon-192.png', badge: 'icon-192.png', dir: 'rtl', lang: 'ar',
   }));
 });
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  e.waitUntil(clients.matchAll({type: 'window', includeUncontrolled: true}).then(l => l.length ? l[0].focus() : clients.openWindow('./')));
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => windows.length
+    ? windows[0].focus()
+    : clients.openWindow('./')));
 });
