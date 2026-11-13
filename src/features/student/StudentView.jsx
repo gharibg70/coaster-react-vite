@@ -7,6 +7,7 @@ import ForecastCard from './ForecastCard.jsx';
 import WeeklyStory from './WeeklyStory.jsx';
 import ArrivalReminder from './ArrivalReminder.jsx';
 import RoadPulse from './RoadPulse.jsx';
+import ChatPanel from '../chat/ChatPanel.jsx';
 
 const OPTIONS = [
   [true, true, 'أذهب وأرجع', 'دهوك إلى الموصل ثم العودة', 'fa-arrows-left-right'],
@@ -14,7 +15,7 @@ const OPTIONS = [
   [false, true, 'أرجع فقط', 'الموصل إلى دهوك', 'fa-arrow-left'],
   [false, false, 'لا أداوم', 'لا حجز لأي رحلة', 'fa-bed'],
 ];
-const TABS = [['home', 'الرئيسية', 'fa-house'], ['map', 'الكوستر', 'fa-location-dot'], ['ann', 'التنبيهات', 'fa-bell'], ['hist', 'السجل', 'fa-clock-rotate-left'], ['profile', 'حسابي', 'fa-user']];
+const TABS = [['home', 'الرئيسية', 'fa-house'], ['map', 'الكوستر', 'fa-location-dot'], ['chat', 'الدردشة', 'fa-comments'], ['ann', 'التنبيهات', 'fa-bell'], ['hist', 'السجل', 'fa-clock-rotate-left'], ['profile', 'حسابي', 'fa-user']];
 
 export default function StudentView({ profile, showToast, reportError }) {
   const [data, setData] = useState(null);
@@ -82,15 +83,16 @@ export default function StudentView({ profile, showToast, reportError }) {
     </section>}
 
     {tab === 'map' && <section className="card"><h2><i className="fa-solid fa-location-dot"/> أين الكوستر؟</h2><BusMap reportError={reportError}/></section>}
+    {tab === 'chat' && <ChatPanel/>}
     <div hidden={tab !== 'map'}><ArrivalReminder showToast={showToast} reportError={reportError}/></div>
 
     {tab === 'ann' && <section><div className="card"><h2><i className="fa-solid fa-bullhorn"/> التنبيهات</h2>{data.announcements.length ? data.announcements.map((announcement, index) => <div className="bub" key={announcement.id || index}><b>{announcement.title}</b><br/><span>{announcement.message}</span><time>{new Date(announcement.created_at).toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad' })}</time></div>) : <div className="empty-state">لا توجد تنبيهات حالياً.</div>}</div><div className="card"><h2><i className="fa-solid fa-mobile-screen"/> إشعارات الهاتف</h2><PushSettings userId={profile.id} showToast={showToast} reportError={reportError}/></div></section>}
     {tab === 'hist' && <section className="card"><h2><i className="fa-solid fa-clock-rotate-left"/> سجل دوامك</h2>{data.history.length ? <table><tbody>{data.history.map((item) => <tr key={item.attendance_date}><td dir="ltr">{item.attendance_date}</td><td>{tripLabel(item.outbound, item.return_trip)}</td></tr>)}</tbody></table> : <div className="empty-state">لم تقم بتأكيد أي رحلة سابقة.</div>}</section>}
     {tab === 'profile' && <section className="card"><h2><i className="fa-solid fa-user"/> حسابي</h2><p><b>الاسم:</b> {profile.full_name}</p><p><b>الهاتف:</b> <span dir="ltr">{profile.phone}</span></p><p><b>حالة الاشتراك:</b> {subscription.status === 'active' && !expired ? 'فعال' : 'غير فعال'}</p><p><b>تاريخ الانتهاء:</b> {subscription.end_date || 'غير محدد'}</p></section>}
 
-    <nav className="bottom-nav">{TABS.map(([key, label, icon]) => <a key={key} className={tab === key ? 'active' : ''} onClick={() => {
+    <nav className="bottom-nav" aria-label="التنقل الرئيسي">{TABS.map(([key, label, icon]) => <button type="button" key={key} className={tab === key ? 'active' : ''} aria-current={tab === key ? 'page' : undefined} onClick={() => {
       setTab(key);
       if (key === 'ann' && data.announcements[0]) localStorage.setItem('annSeen', data.announcements[0].created_at);
-    }}><i className={`fa-solid ${icon}`}/>{label}</a>)}</nav>
+    }}><i className={`fa-solid ${icon}`} aria-hidden="true"/>{label}</button>)}</nav>
   </>;
 }

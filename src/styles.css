@@ -164,3 +164,25 @@ tr:last-child td{border-bottom:0}
 #map{height:min(60vh,420px);border-radius:14px;border:1px solid var(--bd);position:relative;z-index:0}
 .busmk{width:40px;height:40px;border-radius:50%;background:#0f6b45;color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:16px}
 @media(max-width:480px){main{padding-inline:14px}.bottom-nav{gap:0}.bottom-nav a{font-size:10px}.bottom-nav a i{font-size:18px}.share-card{align-items:flex-start}.actions button{flex:1}}
+
+/* Student group chat */
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border:0;border-radius:14px;background:transparent;color:var(--mu);box-shadow:none;font-size:12px;font-weight:600;min-height:44px}
+.bottom-nav button i{font-size:20px}
+.bottom-nav button.active{background:var(--soft);color:var(--pr)}
+.chat-panel{overflow:visible}
+.chat-visibility{padding:10px 12px;border:1px solid var(--bd);border-inline-start:4px solid var(--ac);border-radius:12px;background:var(--bg);font-size:14px}
+.chat-alert{min-height:1.5em;color:var(--mu);font-size:13px}
+.chat-messages{list-style:none;padding:0;margin:12px 0;max-height:52vh;overflow-y:auto}
+.chat-message{padding:12px;margin:8px 0;border:1px solid var(--bd);border-radius:14px;background:var(--bg);overflow-wrap:anywhere}
+.chat-message-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.chat-message-head time{color:var(--mu);font-size:11px}
+.chat-message p{white-space:pre-wrap;margin:8px 0;overflow-wrap:anywhere}
+.chat-report-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--bd);padding-top:8px}
+.chat-report-controls label{font-size:12px}
+.chat-report-controls select{width:auto;flex:1;min-width:140px;margin:0;min-height:40px;padding:6px 10px}
+.chat-composer{border-top:1px solid var(--bd);padding-top:12px}
+.chat-composer label{display:block}
+.chat-composer textarea{resize:vertical;min-height:88px}
+.chat-compose-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--mu);font-size:13px}
+.chat-sr-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:480px){.bottom-nav button{font-size:10px}.bottom-nav button i{font-size:18px}.chat-report-controls button{flex:none}}

@@ -5,6 +5,7 @@ import { createCodes, createAnnouncement, hideAnnouncement, loadAnnouncements, l
 import DepartureMonitor from './DepartureMonitor.jsx';
 import DestinationSettings from './DestinationSettings.jsx';
 import TripRunControls from './TripRunControls.jsx';
+import ChatModeration from '../chat/ChatModeration.jsx';
 
 const TABS = [['boys', 'الشباب'], ['girls', 'البنات'], ['subs', 'المشتركون'], ['tools', 'الرموز والتنبيهات']];
 const TEMPLATES = [['تأخير 15 دقيقة', 'تأخير الكوستر', 'سيتأخر الكوستر اليوم حوالي 15 دقيقة عن موعده.'], ['لا توجد رحلة غداً', 'إلغاء رحلة', 'لا توجد رحلة غداً. سنبلغكم بأي تحديث.'], ['تذكير بالتأكيد', 'تذكير', 'الرجاء تأكيد دوامك لرحلة الغد قبل الساعة 10 مساءً.']];
@@ -153,6 +154,7 @@ export default function AdminView({ profile, showToast, reportError }) {
     </div>}
 
     {tab === 'tools' && <>
+      <ChatModeration profile={profile} showToast={showToast} reportError={reportError}/>
       <form className="card" onSubmit={async (event) => { event.preventDefault(); try { await saveCapacity(Number(capacity)); showToast('تم حفظ عدد المقاعد'); } catch (error) { reportError(error); } }}><h2><i className="fa-solid fa-chair"/> مقاعد الكوستر</h2><input type="number" min="1" max="100" value={capacity} onChange={(event) => setCapacity(event.target.value)}/><button className="full">حفظ عدد المقاعد</button></form>
       <DestinationSettings showToast={showToast} reportError={reportError}/>
       <TripRunControls profile={profile}/>
