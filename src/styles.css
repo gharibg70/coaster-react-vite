@@ -1,0 +1,166 @@
+
+:root {
+  --bg: #f8fafc; --card: #ffffff; --tx: #0f172a; --mu: #64748b;
+  --pr: #059669; --pr-hover: #047857; --on: #ffffff; --bd: #e2e8f0;
+  --dn: #ef4444; --ac: #f59e0b;
+  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+@media(prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a; --card: #1e293b; --tx: #f1f5f9; --mu: #94a3b8;
+    --pr: #10b981; --pr-hover: #34d399; --on: #022c22; --bd: #334155;
+    --dn: #f87171; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--bg); color: var(--tx); font-family: 'Cairo', sans-serif; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* الهيدر */
+header { background: linear-gradient(135deg, var(--pr), var(--pr-hover)); color: var(--on); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 10; }
+header b { font-size: 20px; font-weight: 800; }
+header button { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-family: 'Cairo'; font-size: 14px; cursor: pointer; }
+
+main { max-width: 720px; margin: 0 auto; padding: 20px; padding-bottom: 90px; } /* مساحة للشريط السفلي */
+
+/* البطاقات */
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); transition: transform 0.2s; }
+h2 { margin: 0 0 14px; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.mu { color: var(--mu); font-size: 14px; }
+
+/* المدخلات */
+input, select, textarea { width: 100%; padding: 12px 14px; margin: 6px 0 14px; border: 1.5px solid var(--bd); border-radius: 12px; background: var(--bg); color: var(--tx); font-family: 'Cairo', sans-serif; font-size: 15px; transition: border-color 0.2s; }
+input:focus, select:focus, textarea:focus { border-color: var(--pr); outline: none; }
+label { font-weight: 600; font-size: 14px; }
+
+/* الأزرار */
+button { font-family: 'Cairo', sans-serif; cursor: pointer; border: none; border-radius: 12px; padding: 12px 20px; background: var(--pr); color: var(--on); font-weight: 700; font-size: 15px; transition: all 0.2s; }
+button:active { transform: scale(0.97); }
+button.ghost { background: transparent; color: var(--tx); border: 1.5px solid var(--bd); }
+button.sm { padding: 8px 14px; font-size: 13px; border-radius: 8px; }
+button.dn { background: var(--dn); color: #fff; }
+
+/* أزرار الخيارات */
+.opt { display: flex; align-items: center; justify-content: space-between; width: 100%; text-align: start; background: var(--card); color: var(--tx); border: 2px solid var(--bd); margin-bottom: 10px; padding: 14px 18px; border-radius: 14px; transition: all 0.2s; }
+.opt:hover { border-color: var(--pr); }
+.opt small { display: block; font-weight: 400; color: var(--mu); font-size: 13px; margin-top: 4px; }
+.opt.sel { border-color: var(--pr); background: var(--pr); color: var(--on); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+.opt.sel small { color: rgba(255,255,255,0.8); }
+.opt i { font-size: 20px; }
+
+/* شريط المقاعد */
+.progress-container { background: var(--bd); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.progress-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease, background-color 0.4s; }
+
+/* التنبيهات والشات */
+.bub { background: var(--bg); border: 1px solid var(--bd); border-inline-start: 4px solid var(--pr); border-radius: 12px; padding: 12px 16px; margin: 8px 0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+.bub small { display: block; color: var(--mu); font-size: 12px; margin-bottom: 4px; }
+.bub time { display: block; text-align: end; color: var(--mu); font-size: 11px; margin-top: 6px; }
+
+/* الحالات الفارغة */
+.empty-state { text-align: center; padding: 30px 10px; color: var(--mu); }
+.empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
+
+/* التنبيهات (Toast) */
+#msg { position: fixed; bottom: 80px; inset-inline: 20px; max-width: 520px; margin: auto; padding: 14px 20px; border-radius: 12px; z-index: 99; color: #fff; font-weight: 700; box-shadow: var(--shadow-hover); animation: slideUp 0.3s ease-out; }
+#msg.ok { background: var(--pr); }
+#msg.err { background: var(--dn); }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* شاشة التحميل */
+@keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+.spinner { width: 44px; height: 44px; border: 4px solid var(--bd); border-top-color: var(--pr); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* الشريط السفلي (للطالب) */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); display: flex; justify-content: space-around; padding: 10px 0 15px; border-top: 1px solid var(--bd); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 100; }
+.bottom-nav a { text-decoration: none; color: var(--mu); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; transition: color 0.2s; cursor: pointer; }
+.bottom-nav a i { font-size: 20px; }
+.bottom-nav a.active { color: var(--pr); }
+
+/* إخفاء التبويبات غير النشطة */
+.tab-content { display: none; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* الأدمن */
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+.tabs button { flex: 1; background: var(--card); color: var(--mu); border: 1px solid var(--bd); white-space: nowrap; }
+.tabs button.on { background: var(--pr); color: var(--on); border-color: var(--pr); }
+.stats { display: flex; gap: 10px; margin-bottom: 16px; }
+.stats div { flex: 1; background: var(--bg); border: 1px solid var(--bd); border-radius: 12px; padding: 10px; text-align: center; }
+.stats b { display: block; font-size: 22px; color: var(--pr); }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 10px 6px; border-bottom: 1px solid var(--bd); text-align: start; font-size: 14px; }
+/* ===== تحسينات الواجهة ===== */
+:root{--r:18px;--ring:0 0 0 4px color-mix(in srgb,var(--pr) 18%,transparent);--soft:color-mix(in srgb,var(--pr) 12%,transparent)}
+body{background:radial-gradient(900px 320px at 50% -80px,var(--soft),transparent),var(--bg);min-height:100vh}
+header{padding:calc(14px + env(safe-area-inset-top)) 18px 14px;border-radius:0 0 24px 24px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+header b{display:flex;align-items:center;gap:10px;font-size:19px}
+header b i{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:16px}
+header button{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.18)}
+main{padding-top:18px;padding-bottom:120px}
+.card{border-radius:var(--r);overflow:hidden}
+input,select,textarea{border-radius:14px;min-height:48px}
+input:focus,select:focus,textarea:focus{box-shadow:var(--ring)}
+button{box-shadow:0 2px 0 rgba(0,0,0,.08);min-height:44px}
+button.sm{min-height:36px}
+button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.auth-hero{text-align:center;margin:22px 0 18px}
+.auth-hero .logo{width:84px;height:84px;margin:0 auto 12px;border-radius:26px;background:linear-gradient(135deg,#0f6b45,#10b981);color:#fff;display:grid;place-items:center;font-size:38px;box-shadow:0 12px 28px rgba(5,150,105,.35)}
+.auth-hero h1{margin:0;font-size:26px;font-weight:800}
+.hero-head{margin:-20px -20px 18px;padding:20px;background:linear-gradient(135deg,#0f6b45,#059669);color:#fff}
+.hero-head small{opacity:.85;font-size:13px;font-weight:600}
+.hero-head h1{margin:2px 0 8px;font-size:24px;font-weight:800}
+.hero-head span{display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:13px;font-weight:600}
+.alert{display:flex;gap:8px;align-items:flex-start;background:color-mix(in srgb,var(--dn) 10%,transparent);color:var(--dn);border:1px solid color-mix(in srgb,var(--dn) 30%,transparent);padding:10px 12px;border-radius:12px;font-size:14px;font-weight:600;margin-bottom:12px}
+.progress-container{height:10px}
+.opt{border-radius:16px;position:relative}
+.opt:active:not(:disabled){transform:scale(.98)}
+.opt i{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:var(--soft);color:var(--pr);font-size:18px;flex:none}
+.opt.sel i{background:rgba(255,255,255,.22);color:var(--on)}
+.opt.sel::after{content:"\f00c";font-family:"Font Awesome 6 Free";font-weight:900;position:absolute;top:-8px;inset-inline-end:-6px;width:24px;height:24px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-size:12px;border:2px solid var(--card)}
+.bottom-nav{padding:8px 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;gap:4px;backdrop-filter:blur(12px)}
+.bottom-nav a{flex:1;padding:8px 0;border-radius:14px;transition:background .2s,color .2s}
+.bottom-nav a.active{background:var(--soft)}
+.bottom-nav a.active i{transform:translateY(-2px)}
+#msg{display:flex;align-items:center;gap:10px;bottom:calc(92px + env(safe-area-inset-bottom));border-radius:14px}
+.tabs{scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{border-radius:999px;padding:10px 16px;font-size:14px}
+.stats div{background:var(--soft);border:0;border-radius:14px;padding:12px 8px;font-size:13px;color:var(--mu);font-weight:600}
+.stats b{font-size:28px;line-height:1.2}
+th{color:var(--mu);font-size:12px;font-weight:700}
+tr:last-child td{border-bottom:0}
+#adm .card{overflow-x:auto}
+.bub{border-radius:14px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#map{height:min(60vh,420px);border-radius:14px;border:1px solid var(--bd);position:relative;z-index:0}
+.busmk{width:40px;height:40px;border-radius:50%;background:#0f6b45;color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:16px}
+.busmk.old{background:#94a3b8}
+.alert.ok{color:var(--pr);background:var(--soft);border-color:transparent}
+/* React application layout */
+#root{min-height:100vh}
+.splash{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:24px}
+.splash img{width:120px;height:120px;border-radius:24px;box-shadow:0 10px 25px rgba(0,0,0,.15);animation:pulse 1.5s infinite alternate}
+.full{width:100%;margin-top:10px}
+.center{text-align:center;margin-top:15px}
+.seatbox{display:grid;gap:14px;margin-bottom:20px;padding:15px;border-radius:12px;background:var(--bg)}
+.seat-label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px}
+.default-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);padding:8px 0}
+.default-row select{width:auto;margin:0;padding:6px 12px;border-radius:8px}
+.share-card{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.share-card .mu{font-size:12px}
+.success-text{color:var(--pr);font-weight:700}
+.filters{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.filters input{flex:1;margin:0}
+.sub-item{padding:14px 0;border-top:1px solid var(--bd)}
+.sub-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.table-scroll{overflow-x:auto;margin:10px 0}
+.danger{color:var(--dn)}
+.history-box{margin-top:10px;padding:10px;border-radius:12px;background:var(--bg)}
+.codes{direction:ltr;text-align:left;user-select:all;white-space:pre-wrap;padding:12px;background:var(--bg);border-radius:8px}
+#map{height:min(60vh,420px);border-radius:14px;border:1px solid var(--bd);position:relative;z-index:0}
+.busmk{width:40px;height:40px;border-radius:50%;background:#0f6b45;color:#fff;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:16px}
+@media(max-width:480px){main{padding-inline:14px}.bottom-nav{gap:0}.bottom-nav a{font-size:10px}.bottom-nav a i{font-size:18px}.share-card{align-items:flex-start}.actions button{flex:1}}
