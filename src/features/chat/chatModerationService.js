@@ -8,6 +8,10 @@ export function canCommitReportRequest(requestVersion, currentVersion, requested
   return requestVersion === currentVersion && requestedRoom === currentRoom;
 }
 
+export function canCommitChatDeletion(requestedRoom, currentRoom, canRead) {
+  return requestedRoom === currentRoom && canRead;
+}
+
 export function sanitizeChatReport(row, expectedRoom) {
   if (!row || typeof row !== 'object' || Array.isArray(row)) return null;
   if (expectedRoom && row.room_group !== expectedRoom) return null;
@@ -34,7 +38,7 @@ export function listReportsRpcArgs(room, limit = 100) {
   return { p_room: room, p_limit: safeLimit };
 }
 
-export function deleteReportRpcArgs(room, messageId) {
+export function deleteChatMessageRpcArgs(room, messageId) {
   if (!VALID_ROOMS.includes(room)) throw new Error('مجموعة الدردشة غير صالحة.');
   return { p_room: room, p_message_id: messageId };
 }
@@ -46,8 +50,9 @@ export async function listReportedMessages(room, limit = 100) {
   return sanitizeChatReports(data, room);
 }
 
-export async function deleteReportedMessage(room, messageId) {
-  const { supabase } = await import('../../lib/supabase.js');
-  const { error } = await supabase.rpc('admin_delete_student_chat_message', deleteReportRpcArgs(room, messageId));
+export async function deleteChatMessage(room, messageId, client) {
+  const rpcClient = client || (await import('../../lib/supabase.js')).supabase;
+  if (!rpcClient) throw new Error('تعذر الاتصال بقاعدة البيانات.');
+  const { error } = await rpcClient.rpc('admin_delete_student_chat_message', deleteChatMessageRpcArgs(room, messageId));
   if (error) throw error;
 }

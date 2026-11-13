@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { canCommitChatHistory, checkChatRoomAccess, isChatRoom, limitMessageInput, listMessages, reportMessage, sendMessage, subscribeToMessages, validateMessageBody } from './chatService.js';
+import { canCommitChatDeletion, deleteChatMessage } from './chatModerationService.js';
 
 const REASONS = [['spam', 'محتوى مزعج (spam)'], ['abuse', 'إساءة (abuse)'], ['other', 'سبب آخر (other)']];
 const roomLabel = (room) => room === 'boys' ? 'الشباب' : 'البنات';
@@ -8,7 +9,7 @@ const messageTime = (value) => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('ar-IQ-u-nu-latn', { timeZone: 'Asia/Baghdad' });
 };
 
-export default function ChatPanel({ room, isAdmin = false }) {
+export default function ChatPanel({ room, isAdmin = false, onMessageDeleted }) {
   const validRoom = isChatRoom(room);
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
@@ -16,6 +17,7 @@ export default function ChatPanel({ room, isAdmin = false }) {
   const [reported, setReported] = useState({});
   const [loading, setLoading] = useState(validRoom);
   const [busy, setBusy] = useState(false);
+  const [deletingMessageId, setDeletingMessageId] = useState(null);
   const [accessChecked, setAccessChecked] = useState(!validRoom);
   const [serverEligible, setServerEligible] = useState(false);
   const [accessRetry, setAccessRetry] = useState(0);
@@ -26,6 +28,8 @@ export default function ChatPanel({ room, isAdmin = false }) {
   const canReadRef = useRef(false);
   const authorizedRoomRef = useRef(null);
   const historyRequestVersion = useRef(0);
+  const currentRoomRef = useRef(room);
+  currentRoomRef.current = room;
   const canRead = validRoom && accessChecked && serverEligible && authorizedRoomRef.current === room;
 
   const clearRoomState = useCallback(() => {
@@ -178,6 +182,25 @@ export default function ChatPanel({ room, isAdmin = false }) {
     } catch (cause) { setError(cause?.message || 'تعذر إرسال البلاغ. حاول مجدداً.'); }
   };
 
+  const removeMessage = async (messageId) => {
+    if (!isAdmin || !canRead || !window.confirm('هل تريد حذف هذه الرسالة وجميع البلاغات المرتبطة بها؟')) return;
+    const requestedRoom = room;
+    setDeletingMessageId(messageId);
+    setError('');
+    try {
+      await deleteChatMessage(requestedRoom, messageId);
+      if (!canCommitChatDeletion(requestedRoom, currentRoomRef.current, canReadRef.current)) return;
+      setMessages((current) => current.filter((message) => message.id !== messageId));
+      onMessageDeleted?.(messageId, requestedRoom);
+      setStatus('تم حذف الرسالة.');
+    } catch (cause) {
+      if (!canCommitChatDeletion(requestedRoom, currentRoomRef.current, canReadRef.current)) return;
+      setError(cause?.message || 'تعذر حذف الرسالة. حاول مجدداً.');
+    } finally {
+      if (currentRoomRef.current === requestedRoom) setDeletingMessageId(null);
+    }
+  };
+
   return <section className="card chat-panel" aria-labelledby="student-chat-heading">
     <h2 id="student-chat-heading"><i className="fa-solid fa-comments" aria-hidden="true"/> دردشة {validRoom ? roomLabel(room) : 'الطلاب'}</h2>
     {!accessChecked && <p className="chat-visibility" role="status">جارٍ التحقق من صلاحية الدردشة…</p>}
@@ -194,6 +217,7 @@ export default function ChatPanel({ room, isAdmin = false }) {
         {messages.map((message) => <li className="chat-message" key={message.id}>
           <div className="chat-message-head"><b>{message.is_admin ? <>{message.display_name} <span className="chat-admin-label">(مشرف)</span></> : message.display_name}</b><time dateTime={message.created_at}>{messageTime(message.created_at)}</time></div>
           <p>{message.body}</p>
+          {isAdmin && <div className="actions"><button type="button" className="sm dn" aria-label={`حذف رسالة ${message.display_name}`} disabled={deletingMessageId === message.id} onClick={() => removeMessage(message.id)}>{deletingMessageId === message.id ? 'جارٍ الحذف…' : 'حذف الرسالة'}</button></div>}
           {!isAdmin && <div className="chat-report-controls">
             <label htmlFor={`reason-${message.id}`}>سبب الإبلاغ</label>
             <select id={`reason-${message.id}`} value={reasonById[message.id] || 'spam'} onChange={(event) => setReasonById((current) => ({ ...current, [message.id]: event.target.value }))}>

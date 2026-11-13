@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  canCommitChatDeletion,
   canCommitReportRequest,
   canModerateChat,
-  deleteReportRpcArgs,
+  deleteChatMessage,
+  deleteChatMessageRpcArgs,
   listReportsRpcArgs,
   sanitizeChatReport,
   sanitizeChatReports,
@@ -56,8 +58,36 @@ test('list_report_rpc_arguments_are_room_scoped_and_clamped', () => {
   assert.deepEqual(listReportsRpcArgs('boys', 'bad'), { p_room: 'boys', p_limit: 100 });
 });
 
-test('delete_rpc_arguments_include_room_and_message_id', () => {
-  assert.deepEqual(deleteReportRpcArgs('girls', 'message-9'), { p_room: 'girls', p_message_id: 'message-9' });
+test('delete_rpc_arguments_include_selected_room_and_message_id', () => {
+  assert.deepEqual(deleteChatMessageRpcArgs('girls', 'message-9'), { p_room: 'girls', p_message_id: 'message-9' });
+  assert.deepEqual(deleteChatMessageRpcArgs('boys', 'message-2'), { p_room: 'boys', p_message_id: 'message-2' });
+});
+
+test('delete_chat_message_calls_admin_rpc_with_validated_room_and_message', async () => {
+  const calls = [];
+  const client = { rpc: async (...args) => { calls.push(args); return { error: null }; } };
+  await deleteChatMessage('girls', 'message-9', client);
+  assert.deepEqual(calls, [['admin_delete_student_chat_message', { p_room: 'girls', p_message_id: 'message-9' }]]);
+});
+
+test('delete_chat_message_propagates_rpc_error', async () => {
+  const rpcError = new Error('delete denied');
+  const client = { rpc: async () => ({ error: rpcError }) };
+  await assert.rejects(deleteChatMessage('boys', 'message-2', client), (error) => error === rpcError);
+});
+
+test('delete_chat_message_rejects_invalid_room_before_rpc', async () => {
+  let called = false;
+  const client = { rpc: async () => { called = true; return { error: null }; } };
+  assert.throws(() => deleteChatMessageRpcArgs('students', 'message-1'), /مجموعة الدردشة غير صالحة/);
+  await assert.rejects(deleteChatMessage('students', 'message-1', client), /مجموعة الدردشة غير صالحة/);
+  assert.equal(called, false);
+});
+
+test('stale_chat_deletion_cannot_commit_after_room_switch_or_access_loss', () => {
+  assert.equal(canCommitChatDeletion('boys', 'boys', true), true);
+  assert.equal(canCommitChatDeletion('boys', 'girls', true), false);
+  assert.equal(canCommitChatDeletion('boys', 'boys', false), false);
 });
 
 test('report_projection_rejects_rows_from_another_room', () => {

@@ -147,6 +147,15 @@ tr:last-child td{border-bottom:0}
 .center{text-align:center;margin-top:15px}
 .seatbox{display:grid;gap:14px;margin-bottom:20px;padding:15px;border-radius:12px;background:var(--bg)}
 .seat-label{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px}
+.student-insights>.student-insight{padding:16px 0;border-top:1px solid var(--bd)}
+.student-insights>.student-insight:first-of-type{padding-top:0;border-top:0}
+.student-insights>.student-insight:last-child{padding-bottom:0}
+.student-insights .student-insight h2{font-size:16px;margin-bottom:10px}
+.road-pulse-directions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.road-pulse-direction{min-width:0;padding:12px;border-radius:12px;background:var(--bg)}
+.road-pulse-direction h3{margin:0 0 8px;font-size:15px}
+.road-pulse-direction p:last-child{margin-bottom:0}
+@media(max-width:520px){.road-pulse-directions{grid-template-columns:1fr}}
 .default-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);padding:8px 0}
 .default-row select{width:auto;margin:0;padding:6px 12px;border-radius:8px}
 .share-card{display:flex;align-items:center;justify-content:space-between;gap:12px}

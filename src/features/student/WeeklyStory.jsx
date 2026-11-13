@@ -25,7 +25,7 @@ export default function WeeklyStory({ routeId }) {
     story = `خلال الأيام السبعة الأخيرة، سُجّلت ${total} مقاعد مشغولة إجمالاً. كان ${direction} الأكثر إشغالاً، وبلغ أعلى يوم ${summary.busiestDay?.total || 0} مقاعد.`;
   }
 
-  return <section className="card" aria-labelledby="weekly-story-title">
+  return <section className="student-insight" aria-labelledby="weekly-story-title">
     <h2 id="weekly-story-title">حكاية الأسبوع</h2>
     {state.loading ? <p role="status">جاري إعداد ملخص الأسبوع…</p> : state.error ? <p role="status">تعذر تحميل الملخص الأسبوعي الآن.</p> : <>
       <p>{story}</p>

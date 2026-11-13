@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChatPanel from './ChatPanel.jsx';
-import { canCommitReportRequest, canModerateChat, deleteReportedMessage, listReportedMessages } from './chatModerationService.js';
+import { canCommitReportRequest, canModerateChat, deleteChatMessage, listReportedMessages } from './chatModerationService.js';
 
 const ROOMS = [
   { id: 'boys', label: 'الشباب' },
@@ -49,7 +49,7 @@ export default function ChatModeration({ profile, showToast, reportError }) {
     setDeleting(report.message_id);
     setErrorMessage('');
     try {
-      await deleteReportedMessage(requestedRoom, report.message_id);
+      await deleteChatMessage(requestedRoom, report.message_id);
       if (currentRoom.current !== requestedRoom) return;
       showToast?.('تم حذف الرسالة');
       await refresh();
@@ -80,7 +80,9 @@ export default function ChatModeration({ profile, showToast, reportError }) {
         }}
       >{option.label}</button>)}
     </div>
-    <ChatPanel key={room} room={room} isAdmin />
+    <ChatPanel key={room} room={room} isAdmin onMessageDeleted={(messageId, deletedRoom) => {
+      if (currentRoom.current === deletedRoom) setReports((current) => current.filter((item) => item.message_id !== messageId));
+    }} />
     <section aria-labelledby="chat-reports-heading">
       <h3 id="chat-reports-heading">بلاغات غرفة {ROOMS.find((option) => option.id === room)?.label}</h3>
       <p className="mu">تظهر هنا الرسائل المبلّغ عنها وعدد البلاغات فقط؛ لا تُعرض هويات المبلّغين.</p>

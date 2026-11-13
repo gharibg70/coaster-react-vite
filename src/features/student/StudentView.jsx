@@ -3,10 +3,8 @@ import { dayString, DAYS, tripLabel } from '../../lib/utils.js';
 import { loadStudentData, redeemCode, setAttendance, setWeeklyDefault } from './studentService.js';
 import BusMap from '../map/BusMap.jsx';
 import PushSettings from '../notifications/PushSettings.jsx';
-import ForecastCard from './ForecastCard.jsx';
-import WeeklyStory from './WeeklyStory.jsx';
+import StudentInsights from './StudentInsights.jsx';
 import ArrivalReminder from './ArrivalReminder.jsx';
-import RoadPulse from './RoadPulse.jsx';
 import ChatPanel from '../chat/ChatPanel.jsx';
 
 const OPTIONS = [
@@ -68,10 +66,7 @@ export default function StudentView({ profile, showToast, reportError }) {
         })}
         {data.attendance?.auto && <p className="mu center">تم التأكيد تلقائياً من جدولك الثابت.</p>}
       </div>
-      <ForecastCard routeId={subscription.route_id} targetDate={data.date} currentSeats={seats}/>
-      <WeeklyStory routeId={subscription.route_id}/>
-      <RoadPulse direction="outbound" serviceDate={data.date}/>
-      {data.attendance?.return_trip && <RoadPulse direction="return" serviceDate={data.date}/>}
+      <StudentInsights routeId={subscription.route_id} serviceDate={data.date}/>
       <div className="card"><h2><i className="fa-solid fa-calendar-days"/> جدولي الثابت</h2><p className="mu">يتأكد دوامك تلقائياً حسب هذا الجدول.</p>{DAYS.map((day, index) => {
         const definition = data.defaults.find((item) => item.weekday === index);
         const value = definition ? `${definition.outbound ? 't' : 'f'}${definition.return_trip ? 't' : 'f'}` : '';
