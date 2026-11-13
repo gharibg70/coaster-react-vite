@@ -27,6 +27,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm run check:client-secrets
       - run: npm test
       - run: npm run build
         env:
@@ -34,6 +35,7 @@ jobs:
           # These are browser-public Supabase project values (never a service-role key).
           VITE_SUPABASE_URL: https://bjrpmuwzbcaebhepakdb.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_pPGzlX06HCMy1zTDd5XXnA_xpWE5b4y
+      - run: npm run check:client-secrets
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
