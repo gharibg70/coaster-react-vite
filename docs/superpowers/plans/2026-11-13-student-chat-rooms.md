@@ -37,12 +37,12 @@
 
 **العقود:** `chat_room_access(p_room text) -> boolean`; `send_chat_room_message(p_room text,p_body text) -> {id,room_group,display_name,is_admin,body,created_at}`; `admin_list_student_chat_reports(p_room text,p_limit integer default 100)`؛ `admin_delete_student_chat_message(p_message_id uuid,p_room text)`.
 
-- [ ] أضف اختبارات فاشلة باسم `student_chat_room_rls_hides_other_group_messages` و`chat_room_access_is_group_bound_and_admin_has_both_rooms` و`send_chat_room_message_cannot_cross_groups` و`admin_can_post_to_each_room_independently` و`unclassified_legacy_messages_are_quarantined` و`reports_and_deletes_are_room_scoped`.
-- [ ] طبّق الترحيل الأساسي في PGlite، أنشئ رسائل قديمة لمؤلفين من المجموعتين ورسالة غير قابلة للتصنيف، ثم طبّق ترحيل الغرف وتحقق من الإسناد/العزل.
-- [ ] أضف `room_group` و`is_admin` بأمان وبشكل قابل لإعادة التطبيق؛ صنّف الرسائل القديمة القابلة للتحديد، واترك غير القابلة للتحديد غير مرئية.
-- [ ] حدّث RLS وRPCs لتتحقق من `profiles.group_type`، واسمح للمشرف بالغرفتين، واحذف/عطّل توقيعات RPC القديمة التي تسمح بمسار إرسال مشترك.
-- [ ] قيد البلاغات والحذف حسب الغرفة، مع الحفاظ على سقف 100 للبلاغات ومنع قراءة جداول هوية المؤلف والمبلّغ.
-- [ ] شغّل `node --test tests/chatDatabase.test.js tests/chatPolicy.test.js` وتأكد من نجاح الحالات الجديدة والقديمة.
+- [x] أضف اختبارات رجعية باسم `student_chat_room_rls_hides_other_group_messages` و`chat_room_access_is_group_bound_and_admin_has_both_rooms` و`send_chat_room_message_cannot_cross_groups` و`admin_can_post_to_each_room_independently` و`unclassified_legacy_messages_are_quarantined` و`reports_and_deletes_are_room_scoped`.
+- [x] طبّق الترحيل الأساسي في PGlite، أنشئ رسائل قديمة لمؤلفين من المجموعتين ورسالة غير قابلة للتصنيف، ثم طبّق ترحيل الغرف وتحقق من الإسناد/العزل.
+- [x] أضف `room_group` و`is_admin` بأمان وبشكل قابل لإعادة التطبيق؛ صنّف الرسائل القديمة القابلة للتحديد، واترك غير القابلة للتحديد غير مرئية.
+- [x] حدّث RLS وRPCs لتتحقق من `profiles.group_type`، واسمح للمشرف بالغرفتين، واحذف/عطّل توقيعات RPC القديمة التي تسمح بمسار إرسال مشترك.
+- [x] قيد البلاغات والحذف حسب الغرفة، مع الحفاظ على سقف 100 للبلاغات ومنع قراءة جداول هوية المؤلف والمبلّغ.
+- [x] شغّل `node --test tests/chatDatabase.test.js tests/chatPolicy.test.js` وتأكد من نجاح الحالات الجديدة والقديمة.
 
 ### المهمة 2: خدمة الدردشة وواجهة الطالب/المشرف
 
@@ -50,11 +50,11 @@
 
 **العقود:** `isChatRoom(value)` يتحقق من الغرفتين؛ `checkChatRoomAccess(room)`؛ `listMessages(room,limit=100)`؛ `sendMessage(room,body)`؛ `subscribeToMessages(room,onMessage,onError,onSubscribed)`؛ `reportMessage(room,messageId,reason)` عبر RPC `report_student_chat_room_message` (تتحقق قاعدة البيانات من أن البلاغ ضمن مجموعة الطالب).
 
-- [ ] أضف اختبارات `validates_chat_room_values` و`rejects_message_from_other_room` و`realtime_subscription_filters_by_room`.
-- [ ] مرّر `profile.group_type` للطالب واعرض غرفة واحدة فقط بعنوانها؛ اعرض حالة واضحة عند غياب مجموعة صالحة.
-- [ ] أعد استخدام `ChatPanel` مع `room` و`isAdmin`؛ امسح حالة السجل وألغِ Realtime والطلبات المتأخرة عند تغيير الغرفة أو فقد الإذن.
-- [ ] أخفِ أزرار الإبلاغ في وضع المشرف، وميّز رسائل المشرف بوسم واضح؛ لا تغيّر حماية 30 ثانية، حد النص، أو وصول الطالب.
-- [ ] شغّل اختبارات الدردشة و`npm run build`.
+- [x] أضف اختبارات `validates_chat_room_values` و`rejects_message_from_other_room` و`realtime_subscription_filters_by_room`.
+- [x] مرّر `profile.group_type` للطالب واعرض غرفة واحدة فقط بعنوانها؛ اعرض حالة واضحة عند غياب مجموعة صالحة.
+- [x] أعد استخدام `ChatPanel` مع `room` و`isAdmin`؛ امسح حالة السجل وألغِ Realtime والطلبات المتأخرة عند تغيير الغرفة أو فقد الإذن.
+- [x] أخفِ أزرار الإبلاغ في وضع المشرف، وميّز رسائل المشرف بوسم واضح؛ لا تغيّر حماية 30 ثانية، حد النص، أو وصول الطالب.
+- [x] شغّل اختبارات الدردشة و`npm run build`.
 
 ### المهمة 3: تبويبا المشرف، بلاغات منفصلة، ووثائق الإعداد
 
@@ -62,16 +62,16 @@
 
 **العقود:** `listReportedMessages(room,limit=100)`؛ `deleteReportedMessage(room,messageId)`؛ تُسقط الخدمة أي نتيجة بلاغ لا تطابق الغرفة المحددة، وتبطل الاستجابات القديمة عند تبديل الغرفة؛ غرفة المشرف الحالية واحدة فقط، وترتبط بها الدردشة والبلاغات.
 
-- [ ] أضف مفتاح غرفة accessible بعنواني «الشباب» و«البنات»؛ اربط به سجل الرسائل والإرسال وقائمة البلاغات كلها.
-- [ ] مرّر `room_group` لكل RPC إداري، واطلب تأكيد الحذف ثم حدّث بلاغات الغرفة نفسها.
-- [ ] وثّق مصدر `profiles.group_type`، ترتيب الترحيلين، إعادة تصنيف الرسائل القديمة، وبقاء Supabase دون تعديل حتى موافقة المستخدم.
-- [ ] شغّل `npm test` و`GITHUB_ACTIONS=true npm run build` و`git diff --check`.
+- [x] أضف مفتاح غرفة accessible بعنواني «الشباب» و«البنات»؛ اربط به سجل الرسائل والإرسال وقائمة البلاغات كلها.
+- [x] مرّر `room_group` لكل RPC إداري، واطلب تأكيد الحذف ثم حدّث بلاغات الغرفة نفسها.
+- [x] وثّق مصدر `profiles.group_type`، ترتيب الترحيلين، إعادة تصنيف الرسائل القديمة، وبقاء Supabase دون تعديل حتى موافقة المستخدم.
+- [x] شغّل `npm test` و`GITHUB_ACTIONS=true npm run build` و`git diff --check`.
 
 ### المهمة 4: مراجعة أمنية ونشر
 
-- [ ] راجع SQL والسياسات والـRPCs وعقود Realtime ولاحظ عدم ظهور معرّفات المستخدمين.
-- [ ] احصل على مراجعة مستقلة للتأكد من إغلاق قنوات الغرفة القديمة وعدم وجود وصول عابر للمجموعات.
-- [ ] تأكد أن أي SQL لم يُطبّق، وأن الحزمة لا تحتوي service-role secrets.
-- [ ] انشر إلى `publish` / `gharibg70/coaster-react-vite` فقط بعد نجاح الاختبارات والبناء.
-- [ ] تحقق من نجاح GitHub Actions ومن الاستجابة الحية للصفحة وحزمة الدردشة.
-- [ ] سلّم رابط الموقع، واذكر أن المجموعتين تحتاجان الترحيل اليدوي لتفعيل العزل خادميًا.
+- [x] راجع SQL والسياسات والـRPCs وعقود Realtime ولاحظ عدم ظهور معرّفات المستخدمين.
+- [x] احصل على مراجعة مستقلة للتأكد من إغلاق قنوات الغرفة القديمة وعدم وجود وصول عابر للمجموعات.
+- [x] تأكد أن أي SQL لم يُطبّق، وأن الحزمة لا تحتوي service-role secrets.
+- [x] انشر إلى `publish` / `gharibg70/coaster-react-vite` فقط بعد نجاح الاختبارات والبناء.
+- [x] تحقق من نجاح GitHub Actions ومن الاستجابة الحية للصفحة وحزمة الدردشة.
+- [x] سلّم رابط الموقع، واذكر أن المجموعتين تحتاجان الترحيل اليدوي لتفعيل العزل خادميًا.
