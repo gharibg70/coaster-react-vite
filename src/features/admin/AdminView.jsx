@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { dayString, tripLabel } from '../../lib/utils.js';
 import { createCodes, createAnnouncement, hideAnnouncement, loadAnnouncements, loadAttendance, loadCapacity, loadHistory, loadSubscriptions, resetPassword, saveCapacity, sendPush, setBusLocation, updateEndDate, updateSubscription } from './adminService.js';
+import { submitAnnouncement } from './announcementSubmission.js';
 import DepartureMonitor from './DepartureMonitor.jsx';
 import DestinationSettings from './DestinationSettings.jsx';
 import TripRunControls from './TripRunControls.jsx';
@@ -99,21 +100,22 @@ export default function AdminView({ profile, showToast, reportError }) {
     try { await resetPassword(userId, value); showToast('تم تغيير كلمة المرور. أبلغ الطالب بها.'); }
     catch (error) { reportError(error); }
   };
-  const publish = async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const title = form.get('title').trim();
-    const message = form.get('message').trim();
-    if (!title || !message) return showToast('اكتب العنوان والنص.', true);
-    try {
-      const announcement = await createAnnouncement(title, message, form.get('target'), profile.id);
-      event.currentTarget.reset();
-      await refreshTools();
-      showToast('تم نشر التنبيه. جاري إرسال إشعارات الهاتف...');
-      try { const result = await sendPush(announcement.id); showToast(`تم الإرسال إلى ${result.sent} جهاز.`); }
-      catch { showToast('نُشر التنبيه، لكن فشل إرسال إشعارات الهاتف.', true); }
-    } catch (error) { reportError(error); }
-  };
+  const publish = (event) => submitAnnouncement(event, {
+    profileId: profile.id,
+    readValues: (formElement) => {
+      const form = new FormData(formElement);
+      return {
+        title: form.get('title').trim(),
+        message: form.get('message').trim(),
+        targetGroup: form.get('target'),
+      };
+    },
+    createAnnouncement,
+    refreshTools,
+    sendPush,
+    showToast,
+    reportError,
+  });
 
   const tabBar = <div className="tabs">{TABS.map(([key, label]) => <button key={key} className={tab === key ? 'on' : ''} onClick={() => { setTab(key); setHistory(null); }}>{label}</button>)}</div>;
 
