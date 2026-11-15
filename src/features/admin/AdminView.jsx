@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase.js';
 import { dayString, tripLabel } from '../../lib/utils.js';
 import { createCodes, createAnnouncement, hideAnnouncement, loadAnnouncements, loadAttendance, loadCapacity, loadHistory, loadSubscriptions, resetPassword, saveCapacity, sendPush, setBusLocation, updateEndDate, updateSubscription } from './adminService.js';
 import { submitAnnouncement } from './announcementSubmission.js';
+import { diagnosePushConfiguration } from './pushService.js';
 import DepartureMonitor from './DepartureMonitor.jsx';
 import DestinationSettings from './DestinationSettings.jsx';
 import TripRunControls from './TripRunControls.jsx';
@@ -25,6 +26,7 @@ export default function AdminView({ profile, showToast, reportError }) {
   const [codes, setCodes] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [sharing, setSharing] = useState(false);
+  const [checkingPush, setCheckingPush] = useState(false);
 
   const refreshDay = async () => { try { setRows(await loadAttendance(date)); } catch (error) { reportError(error); } };
   const refreshSubs = async () => { try { setSubscriptions(await loadSubscriptions()); } catch (error) { reportError(error); } };
@@ -117,6 +119,28 @@ export default function AdminView({ profile, showToast, reportError }) {
     reportError,
   });
 
+  const checkPushSetup = async () => {
+    setCheckingPush(true);
+    try {
+      const result = await diagnosePushConfiguration(supabase);
+      if (result?.ok) {
+        showToast(`إعداد الإشعارات سليم؛ الاشتراكات الفعّالة: ${result.activeSubscriptions}.`);
+      } else if (result?.code === 'vapid_configuration_missing') {
+        showToast(`إعداد الإشعارات ناقص: ${result.missing.join('، ')}`, true);
+      } else if (result?.code === 'vapid_configuration_invalid') {
+        showToast('مفاتيح إعداد الإشعارات غير صالحة. لم تُعرض أي قيمة سرية.', true);
+      } else if (result?.code === 'subscription_query_failed') {
+        showToast(`تعذرت قراءة اشتراكات الإشعارات${result.sqlstate ? ` (${result.sqlstate})` : ''}.`, true);
+      } else {
+        showToast('تعذر فحص إعدادات الإشعارات.', true);
+      }
+    } catch {
+      showToast('تعذر الاتصال بخدمة الفحص. لم يتم إرسال أي إشعار.', true);
+    } finally {
+      setCheckingPush(false);
+    }
+  };
+
   const tabBar = <div className="tabs">{TABS.map(([key, label]) => <button key={key} className={tab === key ? 'on' : ''} onClick={() => { setTab(key); setHistory(null); }}>{label}</button>)}</div>;
 
   return <>
@@ -165,7 +189,7 @@ export default function AdminView({ profile, showToast, reportError }) {
         try { const result = await createCodes(group, Number(count) || 1); setCodes(result.map((item) => item.new_code)); showToast('تم إنشاء الرموز'); }
         catch (error) { reportError(error); }
       }}><h2><i className="fa-solid fa-ticket"/> إنشاء رموز اشتراك</h2><select value={group} onChange={(event) => setGroup(event.target.value)}><option value="boys">شباب</option><option value="girls">بنات</option></select><input type="number" min="1" max="100" value={count} onChange={(event) => setCount(event.target.value)}/><button className="full">إنشاء الرموز</button><p className="mu">الرموز تظهر مرة واحدة فقط. انسخها وأعطِ كل طالب رمزه.</p>{codes.length > 0 && <pre className="codes">{codes.join('\n')}</pre>}</form>
-      <form className="card" onSubmit={publish}><h2><i className="fa-solid fa-bullhorn"/> إرسال تنبيه</h2><div className="actions">{TEMPLATES.map((template) => <button type="button" className="sm" key={template[0]} onClick={(event) => { const targetForm = event.currentTarget.form; targetForm.elements.title.value = template[1]; targetForm.elements.message.value = template[2]; }}>{template[0]}</button>)}</div><select name="target"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select><input name="title" placeholder="العنوان" required/><textarea name="message" rows="3" placeholder="نص التنبيه" required/><button className="full">إرسال التنبيه</button></form>
+      <form className="card" onSubmit={publish}><h2><i className="fa-solid fa-bullhorn"/> إرسال تنبيه</h2><div className="actions">{TEMPLATES.map((template) => <button type="button" className="sm" key={template[0]} onClick={(event) => { const targetForm = event.currentTarget.form; targetForm.elements.title.value = template[1]; targetForm.elements.message.value = template[2]; }}>{template[0]}</button>)}</div><select name="target"><option value="">الجميع</option><option value="boys">الشباب</option><option value="girls">البنات</option></select><input name="title" placeholder="العنوان" required/><textarea name="message" rows="3" placeholder="نص التنبيه" required/><button className="full">إرسال التنبيه</button><button type="button" className="sm" disabled={checkingPush} onClick={checkPushSetup}>{checkingPush ? 'جارٍ الفحص…' : 'فحص الإشعارات دون إرسال'}</button><p className="mu">يفحص إعدادات الخادم والاشتراكات فقط؛ لا ينشئ إعلاناً ولا يرسل إشعاراً.</p></form>
       <section className="card"><h2><i className="fa-solid fa-list"/> التنبيهات المرسلة</h2>{announcements.map((announcement) => <div className="bub" key={announcement.id}><small>إلى: {announcement.target_group === 'boys' ? 'الشباب' : announcement.target_group === 'girls' ? 'البنات' : 'الجميع'}</small><b>{announcement.title}</b><p>{announcement.message}</p><button className="sm dn" onClick={async () => {
         if (!confirm('إخفاء هذا التنبيه عن الطلاب؟')) return;
         try { await hideAnnouncement(announcement.id); showToast('تم إخفاء التنبيه'); refreshTools(); }

@@ -4,6 +4,7 @@ import {
   PayloadTooLargeError,
   extractBearerToken,
   isActiveAdmin,
+  isPushDiagnosticRequest,
   isValidAnnouncementRequest,
   publicPushFailure,
   readJsonWithLimit,
@@ -29,6 +30,13 @@ test('accepts_only_a_single_uuid_announcement_identifier', () => {
   assert.equal(isValidAnnouncementRequest({ announcement_id: 'not-a-uuid' }), false);
   assert.equal(isValidAnnouncementRequest({ announcement_id: ['123e4567-e89b-42d3-a456-426614174000'] }), false);
   assert.equal(isValidAnnouncementRequest(null), false);
+});
+
+test('accepts_only_a_strict_diagnostic_flag_without_other_request_data', () => {
+  assert.equal(isPushDiagnosticRequest({ diagnostic: true }), true);
+  assert.equal(isPushDiagnosticRequest({ diagnostic: true, announcement_id: 'extra' }), false);
+  assert.equal(isPushDiagnosticRequest({ diagnostic: 'true' }), false);
+  assert.equal(isPushDiagnosticRequest([]), false);
 });
 
 test('parses_small_json_when_content_length_is_missing', async () => {

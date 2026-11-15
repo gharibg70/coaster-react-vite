@@ -44,6 +44,14 @@ export function isValidAnnouncementRequest(body) {
     && UUID_PATTERN.test(body.announcement_id);
 }
 
+export function isPushDiagnosticRequest(body) {
+  return body !== null
+    && typeof body === 'object'
+    && !Array.isArray(body)
+    && body.diagnostic === true
+    && Object.keys(body).length === 1;
+}
+
 export function publicPushFailure() {
   return { error: 'internal_error' };
 }
